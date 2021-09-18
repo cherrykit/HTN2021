@@ -15,7 +15,7 @@ body {
 #app {
   padding-top: 10px;
   display: flex;
-  height: 100%;
+  min-height: 100%;
   background-color: #434343;
   color: #5297ff;
 }
