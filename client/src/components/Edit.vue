@@ -1,13 +1,7 @@
 <template>
   <b-container id="page">
     <h1>{{formatNames(fileArray)}}</h1>
-    <Container @drop="onDrop">
-        <Draggable v-for="item in items" :key="item.id">
-            <div class="draggable-item">
-              {{item.data}}
-            </div>
-        </Draggable>
-    </Container>
+    
     <b-button variant="primary" @click="sendImages()">Continue</b-button>
     <div> {{msg}} </div>
   </b-container>
