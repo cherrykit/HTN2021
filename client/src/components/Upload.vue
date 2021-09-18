@@ -3,6 +3,7 @@
     <h1>Please upload {{ num }} images.</h1>
     <br>
     <b-form-file
+      v-show="this.fileArray.length==0"
       v-model="fileArray"
       :state="Boolean(fileArray)"
       :file-name-formatter="formatNames"
@@ -11,13 +12,20 @@
       accept="image/*"
       multiple
     ></b-form-file>
-    <!-- <Container @drop="onDrop">
-        <Draggable v-for="item in images" :key="item.id">
-            <div class="draggable-item">
-              {{item.data}}
-            </div>
+    <Container @drop="onDrop" v-show="this.fileArray.length">
+        <Draggable v-for="item in items" :key="item.id">
+            <b-row class="draggable-item dragRow">
+                <b-col>
+                <b-img :src="images[item.id]" height=50 width=50 rounded></b-img>
+                </b-col>
+                <b-col><img @click="onEdit" class="image" src="../assets/edit.png" alt="edit"></b-col>
+                <b-col><img @click="onDelete" class="image" src="../assets/delete.png" alt="delete"></b-col>
+            </b-row>
         </Draggable>
-    </Container> -->
+    </Container>
+    <b-row class="dragRow" v-show="this.fileArray.length">
+        <b-col> Add new image </b-col>
+    </b-row>
     <br>
     <br>
     <b-button variant="primary" @click="onSubmit()">Continue</b-button>
@@ -27,6 +35,8 @@
 
 <script>
 import axios from "axios";
+import { Container, Draggable } from "vue-dndrop";
+import { applyDrag, generateItems } from "../main.js";
 const base64Encode = data =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -37,12 +47,14 @@ const base64Encode = data =>
 
 export default {
   name: 'Upload',
+  components: {Container, Draggable},
   data() {
     return {
       num: 10,
       images: [],
       fileArray: [],
       msg: 'Test',
+      items: [],
     };
   },
   watch: {
@@ -64,6 +76,10 @@ export default {
   },
   methods: {
     formatNames(files) {
+      if (this.items.length == 0) {
+        this.items = generateItems(this.fileArray.length, i => ({ id: i, data: this.fileArray[i].name }))
+        console.log(this.items)
+      }
       return files.length === 1 ? files[0].name : `${files.length} files selected`;
     },
     onSubmit() {
@@ -78,7 +94,7 @@ export default {
             audio_name: "audio1",
             file_type: "mp3"
         }).then((res) => {
-            this.msg = 'Success';
+            console.log("Success")
           })
           .catch((error) => {
             // eslint-disable-next-line
@@ -88,6 +104,15 @@ export default {
         this.msg = 'You selected an incorrect number of files.';
       }
     },
+    onDrop(dropResult) {
+      this.items = applyDrag(this.items, dropResult);
+    },
+    onEdit() {
+        console.log("edit")
+    },
+    onDelete() {
+        console.log("delete")
+    }
   },
 };
 </script>
@@ -96,5 +121,10 @@ export default {
 #page {
     padding: 20px;
     text-align: center;
+}
+.dragRow {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border: solid;
 }
 </style>
