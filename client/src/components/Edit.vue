@@ -1,6 +1,13 @@
 <template>
   <b-container id="page">
     <h1>{{formatNames(fileArray)}}</h1>
+    <Container @drop="onDrop">
+        <Draggable v-for="item in items" :key="item.id">
+            <div class="draggable-item">
+              {{item.data}}
+            </div>
+        </Draggable>
+    </Container>
     <b-button variant="primary" @click="sendImages()">Continue</b-button>
     <div> {{msg}} </div>
   </b-container>
@@ -9,8 +16,11 @@
 <script>
 import axios from "axios";
 import { mapState } from 'vuex';
+import { Container, Draggable } from "vue-dndrop";
+import { applyDrag, generateItems } from "../main.js";
 export default {
   name: 'Edit',
+  components: {Container, Draggable},
   computed: mapState({
     fileArray: state => state.fileArray
   }),
@@ -18,10 +28,14 @@ export default {
     return {
       num: 10,
       msg: 'Test',
+      items: []
     };
   },
   methods: {
     formatNames(files) {
+      console.log(this.fileArray)
+      if (this.items.length == 0)
+        this.items = generateItems(this.fileArray.length, i => ({ id: i, data: this.fileArray[i].name }))
       return files.length === 1 ? files[0].name : `${files.length} files selected`;
     },
     sendImages() {
@@ -45,6 +59,9 @@ export default {
         this.msg = 'You selected an incorrect number of files.';
       }
     },
+    onDrop(dropResult) {
+      this.items = applyDrag(this.items, dropResult);
+    }
   },
 };
 </script>
