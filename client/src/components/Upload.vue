@@ -35,7 +35,8 @@ export default {
     onSubmit() {
       this.msg = '';
       if (this.fileArray && this.fileArray.length === this.num) {
-        this.msg = 'Success';
+        this.$store.commit('init', this.fileArray)
+        this.$router.push({name: "Edit"})
       } else {
         this.msg = 'You selected an incorrect number of files.';
       }
