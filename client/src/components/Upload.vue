@@ -1,6 +1,7 @@
 <template>
   <div class="container">
-    <p>Please upload {{ num }} images.</p>
+    <h1>Please upload {{ num }} images.</h1>
+    <b-button type="submit" variant="danger">Upload</b-button>
   </div>
 </template>
 
@@ -9,7 +10,7 @@ export default {
   name: 'Upload',
   data() {
     return {
-      num: 10
+      num: 10,
     };
   },
 };
