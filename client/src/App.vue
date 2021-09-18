@@ -17,5 +17,6 @@ body {
   display: flex;
   height: 100%;
   background-color: #434343;
+  color: #5297ff;
 }
 </style>
