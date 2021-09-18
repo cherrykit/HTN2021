@@ -1,8 +1,10 @@
 <template>
-  <div class="container">
+  <b-container id="page">
     <h1>Please upload {{ num }} images.</h1>
-    <b-button type="submit" variant="danger">Upload</b-button>
-  </div>
+    <br>
+    <b-button type="submit" variant="primary">Upload images</b-button>
+    <b-form-file no-drop accept="image/*"></b-form-file>
+  </b-container>
 </template>
 
 <script>
@@ -11,7 +13,15 @@ export default {
   data() {
     return {
       num: 10,
+      file: null,
     };
   },
 };
 </script>
+
+<style>
+#page {
+    padding: 20px;
+    text-align: center;
+}
+</style>
