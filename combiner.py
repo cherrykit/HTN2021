@@ -11,9 +11,15 @@ def combine(inputs, audio, output):
         set_duration(pair[1])
         for pair in inputs
     ]
-    video_clip = mpy.concatenate_videoclips(image_videos)
+    # idk why, but unless I create a CompositeVideoClip and set the size variable the output video doesn't work
+    # temp solution: wrap the output in a CompositeVideoClip
+    video_clip = mpy.CompositeVideoClip(
+        [mpy.concatenate_videoclips(image_videos, method="compose").
+        set_position(('center', 0))],
+        size=PHONE_RESOLUTION
+    )
     audio_clip = mpy.AudioFileClip(audio)
     video_clip.audio = audio_clip
     video_clip.write_videofile(output, fps=24)
 
-combine([("photo1.jpg", 10), ("photo2.jpeg", 17)], "audio1.mp3", "test.mp4")
+# combine([("photo1.jpg", 10), ("photo2.jpeg", 17)], "audio1.mp3", "test.mp4")
