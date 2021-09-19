@@ -12,6 +12,9 @@ import pychorus
 from pychorus import find_and_output_chorus
 import numpy as np
 import sys
+import librosa
+from pydub import AudioSegment
+import os
 '''
 def compute_similarity_matrix_slow(chroma):
     """Slow but straightforward way to compute time time similarity matrix"""
@@ -33,7 +36,7 @@ M = np.zeros((num_samples, num_samples))
 for i in range(num_samples):
     for j in range(num_samples):
         # For every pair of samples, check similarity
-        M[i, j] = 1 - (
+        M[i, j] = 1 - (  
             np.linalg.norm(chroma[:, i] - chroma[:, j]) / sqrt(12))
 
 T = np.zeros((num_samples, num_samples))
@@ -42,6 +45,43 @@ for i in range(num_samples):
         T[i,j]= (M[i,i-j] if i - j >= 0 else 0)
 '''
 
+def bpm(audio_file):
+    '''Produces the bpm given an audio file'''
+    y, sr = librosa.load(audio_file)
+    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+    print('Estimated tempo: {:0.2f} beats per minute'.format(tempo))
+    return tempo
+    
+def cut_audio(audio_file, chorus_start_sec, tempo):
+    sound = AudioSegment.from_file(audio_file)
+    
+    # clip starts 5 seconds before chorus
+    chorus_start_sec = (chorus_start_sec*1000) - 5000
+    chorus_end_sec = chorus_start_sec + 15000
+    audio_clip = sound[chorus_start_sec:chorus_end_sec]
+    
+    # if path doesn't exist, then create new folder for music
+    path = "./" + str(audio_file[:-4])
+    if not os.path.exists(path):
+        os.mkdir(path)
+    audio_clip.export(path + "/0_full.mp3", format="mp3")
+    
+    # cut audio by tempo
+    video = sound[chorus_start_sec:chorus_start_sec+5000]
+    video.export(path + "/1_video.mp3", format="mp3")
+    ms = 60000 / tempo
+    
+    # for how many bpm fit into 10 seconds, create split up audio
+    start = chorus_start_sec+5000
+    for i in range(2,int(10000//ms)+2):
+        pic = sound[start:start+ms]
+        pic.export(path + "/" + str(i) + "_pic.mp3", format="mp3")
+        start = start+ms
+    
+
 if __name__ == "__main__":
-    audio_file = sys.argv[1] if len(sys.argv) > 1 else "Coldplay - Fix You.mp3"
-    chorus_start_sec = find_and_output_chorus(audio_file, audio_file.replace(".mp3", "-clipped.wav"), 60)
+    audio_file = sys.argv[1] if len(sys.argv) > 1 else "Stereo-Hearts.mp3"
+    chorus_start_sec = find_and_output_chorus(audio_file, audio_file.replace(".mp3", "-clipped.wav"), 20)
+    tempo = bpm(audio_file)
+    cut_audio(audio_file, chorus_start_sec, tempo)
+    
