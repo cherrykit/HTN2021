@@ -1,11 +1,13 @@
 <template>
   <b-container id="page">
     <b-navbar fixed="top" style="background-color: #434343; justify-content: center;">
-    <h1 v-show="this.fileArray.length==0">Please upload {{ num }} images.</h1>
-    <h1 v-show="this.fileArray.length"><div :class="items.length !== num ? 'textColor' : ''"> {{ items.length }} / {{ num }} </div> images uploaded.</h1>
+    <h1 v-show="this.fileArray.length==0 && !preview">Please upload {{ num }} images.</h1>
+    <h1 v-show="this.fileArray.length && !preview"><div :class="items.length !== num ? 'textColor' : ''"> {{ items.length }} / {{ num }} </div> images uploaded.</h1>
+    <h1 v-show="preview && !video">Loading your preview...</h1>
+    <h1 v-show="preview && video">Preview your result</h1>
     </b-navbar>
     <b-form-file style="margin-top: 100px;"
-      v-show="this.fileArray.length==0"
+      v-show="this.fileArray.length==0 && !preview"
       v-model="fileArray"
       :state="Boolean(fileArray)"
       :file-name-formatter="formatNames"
@@ -14,7 +16,7 @@
       accept="image/*"
       multiple
     ></b-form-file>
-    <Container @drop="onDrop" v-show="this.fileArray.length" style="padding-top: 100px;">
+    <Container @drop="onDrop" v-show="this.fileArray.length && !preview" style="padding-top: 100px;">
         <Draggable v-for="item in items" :key="item.id">
             <b-row class="draggable-item dragRow" align-v="center">
                 <b-col>
@@ -25,7 +27,7 @@
             </b-row>
         </Draggable>
     </Container>
-    <b-row style="padding-top: 10px;" v-show="this.fileArray.length">
+    <b-row style="padding-top: 10px;" v-show="this.fileArray.length && !preview">
         <b-col> <b-form-file
             v-model="file"
             :state="Boolean(fileArray)"
@@ -36,8 +38,17 @@
         ></b-form-file> </b-col>
     </b-row>
     <br>
-    <b-button variant="primary" @click="onSubmit()" v-show="this.items.length == num">Continue</b-button>
-    <div style="color: red;">{{msg}}</div>
+    <b-button variant="primary" @click="onSubmit()" v-show="this.items.length == num && !preview">Continue</b-button>
+    <video controls v-show="preview && video" :src="video">
+    </video>
+    <br>
+    <b-row v-show="preview && video">
+    <b-col>
+    <b-button variant="secondary" @click="goBack()">Change images</b-button>
+    </b-col><b-col>
+    <a class="btn btn-primary" :href="video" download target="_blank">Download!</a>
+    </b-col>
+    </b-row>
   </b-container>
 </template>
 
@@ -63,7 +74,10 @@ export default {
       fileArray: [],
       msg: '',
       items: [],
-      file: null
+      file: null,
+      input_lengths: new Array(10).fill(1),
+      preview: false,
+      video: null
     };
   },
   watch: {
@@ -111,16 +125,17 @@ export default {
         this.items.forEach(val => submit_img.push(this.images[val.id]))
         axios.post(path, {
             inputs: submit_img, 
-            input_lengths: new Array(this.images.length).fill(1),
+            input_lengths: this.input_lengths,
             audio_name: "audio1",
             file_type: "mp3"
         }).then((res) => {
-            console.log("Success")
+            this.video = 'data:video/' + res.data.file_type + ';base64,' + res.data.video_encoding.substring(2).slice(0, -1);
           })
           .catch((error) => {
             // eslint-disable-next-line
             console.error(error);
           });
+        this.preview = true;
       } else {
         this.msg = 'You selected an incorrect number of files.';
       }
@@ -128,17 +143,18 @@ export default {
     onDrop(dropResult) {
       this.items = applyDrag(this.items, dropResult);
     },
-    onEdit(id) {
-        console.log("edit")
-    },
     onDelete(id) {
         this.items = this.items.filter(val => val.id != id)
         if (this.items.length == 0) {
             this.fileArray = []
             this.images = []
         }
+    },
+    goBack() {
+      this.video = null;
+      this.preview = false;
     }
-  },
+  }
 };
 </script>
 
