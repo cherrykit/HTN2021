@@ -47,7 +47,7 @@
             accept="image/*"
         ></b-form-file> </b-col>
     </b-row>
-    <h1 v-show="this.fileArray.length && !preview">Choose filters and text:</h1>
+    <h1 v-show="this.fileArray.length && !preview">Choose a filter:</h1>
     <b-form-checkbox-group
       v-show="this.fileArray.length && !preview"
       v-model="effectsSelected"
