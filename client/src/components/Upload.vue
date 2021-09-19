@@ -1,8 +1,13 @@
 <template>
   <b-container id="page">
-    <h1>Please upload {{ num }} images.</h1>
-    <br>
-    <b-form-file
+    <b-navbar fixed="top" style="background-color: #434343; justify-content: center;">
+    <h1 v-show="this.fileArray.length==0 && !preview">Please upload {{ num }} images.</h1>
+    <h1 v-show="this.fileArray.length && !preview"><div :class="items.length !== num ? 'textColor' : ''"> {{ items.length }} / {{ num }} </div> images uploaded.</h1>
+    <h1 v-show="preview && !video">Loading your preview...</h1>
+    <h1 v-show="preview && video">Preview your result</h1>
+    </b-navbar>
+    <b-form-file style="margin-top: 100px;"
+      v-show="this.fileArray.length==0 && !preview"
       v-model="fileArray"
       :state="Boolean(fileArray)"
       :file-name-formatter="formatNames"
@@ -11,22 +16,46 @@
       accept="image/*"
       multiple
     ></b-form-file>
-    <!-- <Container @drop="onDrop">
-        <Draggable v-for="item in images" :key="item.id">
-            <div class="draggable-item">
-              {{item.data}}
-            </div>
+    <Container @drop="onDrop" v-show="this.fileArray.length && !preview" style="padding-top: 100px;">
+        <Draggable v-for="item in items" :key="item.id">
+            <b-row class="draggable-item dragRow" align-v="center">
+                <b-col>
+                <b-img :src="images[item.id]" height=50 width=50 rounded></b-img>
+                </b-col>
+                <!-- b-col><img @click="onEdit(item.id)" class="image" src="../assets/edit.png" alt="edit"></b-col -->
+                <b-col><img @click="onDelete(item.id)" class="image" src="../assets/delete.png" alt="delete"></b-col>
+            </b-row>
         </Draggable>
-    </Container> -->
+    </Container>
+    <b-row style="padding-top: 10px;" v-show="this.fileArray.length && !preview">
+        <b-col> <b-form-file
+            v-model="file"
+            :state="Boolean(fileArray)"
+            :file-name-formatter="formatName"
+            placeholder="Add new image"
+            no-drop
+            accept="image/*"
+        ></b-form-file> </b-col>
+    </b-row>
     <br>
+    <b-button variant="primary" @click="onSubmit()" v-show="this.items.length == num && !preview">Continue</b-button>
+    <video controls v-show="preview && video" :src="video">
+    </video>
     <br>
-    <b-button variant="primary" @click="onSubmit()">Continue</b-button>
-    <div style="color: red;">{{msg}}</div>
+    <b-row v-show="preview && video">
+    <b-col>
+    <b-button variant="secondary" @click="goBack()">Change images</b-button>
+    </b-col><b-col>
+    <a class="btn btn-primary" :href="video" download target="_blank">Download!</a>
+    </b-col>
+    </b-row>
   </b-container>
 </template>
 
 <script>
 import axios from "axios";
+import { Container, Draggable } from "vue-dndrop";
+import { applyDrag, generateItems } from "../main.js";
 const base64Encode = data =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -37,12 +66,18 @@ const base64Encode = data =>
 
 export default {
   name: 'Upload',
+  components: {Container, Draggable},
   data() {
     return {
       num: 10,
       images: [],
       fileArray: [],
-      msg: 'Test',
+      msg: '',
+      items: [],
+      file: null,
+      input_lengths: new Array(10).fill(1),
+      preview: false,
+      video: null
     };
   },
   watch: {
@@ -64,31 +99,62 @@ export default {
   },
   methods: {
     formatNames(files) {
+      if (this.items.length == 0) {
+        this.items = generateItems(this.fileArray.length, i => ({ id: i }))
+        console.log(this.items)
+      }
       return files.length === 1 ? files[0].name : `${files.length} files selected`;
     },
+    formatName(file) {
+        if (file) {
+            this.items.push({id: this.fileArray.length})
+            this.fileArray.push(file[0])
+            base64Encode(file[0]).then(value => {
+                this.images.push(value);
+                this.file = null;
+            })
+        }
+    },
     onSubmit() {
-      this.msg = 'I am here';
+      this.msg = '';
       var path = 'http://127.0.0.1:5000/upload_images';
       console.log(this.images)
       console.log(this.num)
-      if (this.images && this.images.length === this.num) {
+      if (this.items && this.items.length === this.num) {
+        var submit_img = []
+        this.items.forEach(val => submit_img.push(this.images[val.id]))
         axios.post(path, {
-            inputs: this.images, 
-            input_lengths: new Array(this.images.length).fill(1),
+            inputs: submit_img, 
+            input_lengths: this.input_lengths,
             audio_name: "audio1",
             file_type: "mp3"
         }).then((res) => {
-            this.msg = 'Success';
+            this.video = 'data:video/' + res.data.file_type + ';base64,' + res.data.video_encoding.substring(2).slice(0, -1);
           })
           .catch((error) => {
             // eslint-disable-next-line
             console.error(error);
           });
+        this.preview = true;
       } else {
         this.msg = 'You selected an incorrect number of files.';
       }
     },
-  },
+    onDrop(dropResult) {
+      this.items = applyDrag(this.items, dropResult);
+    },
+    onDelete(id) {
+        this.items = this.items.filter(val => val.id != id)
+        if (this.items.length == 0) {
+            this.fileArray = []
+            this.images = []
+        }
+    },
+    goBack() {
+      this.video = null;
+      this.preview = false;
+    }
+  }
 };
 </script>
 
@@ -96,5 +162,13 @@ export default {
 #page {
     padding: 20px;
     text-align: center;
+}
+.dragRow {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border: solid;
+}
+.textColor {
+    color: red;
 }
 </style>
