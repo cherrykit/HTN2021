@@ -65,7 +65,7 @@ def cut_audio(audio_file, chorus_start_sec, tempo):
     if not os.path.exists(path):
         os.mkdir(path)
     audio_clip.export(path + "/0_full.mp3", format="mp3")
-    
+    audio_path = path + "/0_full.mp3"
     # cut audio by tempo
     video = sound[chorus_start_sec:chorus_start_sec+5000]
     video.export(path + "/1_video.mp3", format="mp3")
@@ -78,13 +78,13 @@ def cut_audio(audio_file, chorus_start_sec, tempo):
         input_lengths.append(float(ms) / 1000)
         pic.export(path + "/" + str(i) + "_pic.mp3", format="mp3")
         start = start+ms
-    return input_lengths
+    return input_lengths, audio_path
     
 def main(audio_file):
-    chorus_start_sec = find_and_output_chorus(audio_file, audio_file.replace(".mp3", "-clipped.wav"), 20)
+    chorus_start_sec = find_and_output_chorus(audio_file, audio_file.replace(".mp3", "-clipped.wav"), 10)
     tempo = bpm(audio_file)
-    input_lengths = cut_audio(audio_file, chorus_start_sec, tempo)
-    return input_lengths
+    input_lengths, audio_path = cut_audio(audio_file, chorus_start_sec, tempo)
+    return input_lengths, audio_path
 
 if __name__ == "__main__":
     main(sys.argv[1] if len(sys.argv) > 1 else "Stereo-Hearts.mp3")

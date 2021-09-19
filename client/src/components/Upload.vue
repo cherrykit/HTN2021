@@ -47,6 +47,17 @@
             accept="image/*"
         ></b-form-file> </b-col>
     </b-row>
+    <h1 v-show="this.fileArray.length && !preview">Choose filters and text:</h1>
+    <b-form-checkbox-group
+      v-show="this.fileArray.length && !preview"
+      v-model="effectsSelected"
+      :options="effects"
+      class="mb-3"
+      value-field="item"
+      text-field="name"
+      disabled-field="notEnabled"
+    ></b-form-checkbox-group>
+    <!-- <input v-show="this.fileArray.length && !preview" v-model="message" placeholder="Intro Text"> -->
     <br>
     <br>
     <b-row v-show="music && !preview && num != -1">
@@ -97,8 +108,40 @@ export default {
       input_lengths: [],
       preview: false,
       video: null,
+      effects: [
+      {
+        name: 'Black & White',
+        item: 'bw'
+      },
+      {
+        name: 'Brighten',
+        item: 'bright'
+      },
+      {
+        name: 'Darken',
+        item: 'dark'
+      },
+      {
+        name: 'Invert Colours',
+        item: 'invert'
+      },
+      {
+        name: 'Flip Horizontally',
+        item: 'horizontal'
+      },
+      {
+        name: 'Flip Vertically',
+        item: 'vertical'
+      },
+      {
+        name: 'Painting',
+        item: 'painting'
+      }
+    ],
+    effectsSelected: [],
       music: null,
-      filename: null
+      filename: null,
+      message: ""
     };
   },
   watch: {
@@ -129,6 +172,7 @@ export default {
             this.num = res.data.num_inputs
             this.input_lengths = res.data.input_lengths
             this.filename = res.data.audio_name
+            this.file_type = res.data.file_type
           })
           .catch((error) => {
             // eslint-disable-next-line
@@ -169,7 +213,9 @@ export default {
             inputs: submit_img, 
             input_lengths: this.input_lengths,
             audio_name: this.filename,
-            file_type: "mp3"
+            file_type: this.file_type,
+            effectsSelected: this.effectsSelected,
+            message: this.message
         }).then((res) => {
             this.video = 'data:video/' + res.data.file_type + ';base64,' + res.data.video_encoding.substring(2).slice(0, -1);
           })
