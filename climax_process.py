@@ -54,8 +54,8 @@ def bpm(audio_file):
     
 def cut_audio(audio_file, chorus_start_sec, tempo):
     sound = AudioSegment.from_file(audio_file)
-    
     # clip starts 5 seconds before chorus
+    input_lengths = [5]
     chorus_start_sec = (chorus_start_sec*1000) - 5000
     chorus_end_sec = chorus_start_sec + 15000
     audio_clip = sound[chorus_start_sec:chorus_end_sec]
@@ -75,13 +75,17 @@ def cut_audio(audio_file, chorus_start_sec, tempo):
     start = chorus_start_sec+5000
     for i in range(2,int(10000//ms)+2):
         pic = sound[start:start+ms]
+        input_lengths.append(float(ms) / 1000)
         pic.export(path + "/" + str(i) + "_pic.mp3", format="mp3")
         start = start+ms
+    return input_lengths
     
-
-if __name__ == "__main__":
-    audio_file = sys.argv[1] if len(sys.argv) > 1 else "Stereo-Hearts.mp3"
+def main(audio_file):
     chorus_start_sec = find_and_output_chorus(audio_file, audio_file.replace(".mp3", "-clipped.wav"), 20)
     tempo = bpm(audio_file)
-    cut_audio(audio_file, chorus_start_sec, tempo)
+    input_lengths = cut_audio(audio_file, chorus_start_sec, tempo)
+    return input_lengths
+
+if __name__ == "__main__":
+    main(sys.argv[1] if len(sys.argv) > 1 else "Stereo-Hearts.mp3")
     
