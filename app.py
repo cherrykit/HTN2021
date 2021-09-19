@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from flask import Flask, request, json, jsonify
 from flask_cors import CORS
 from mimetypes import guess_extension
@@ -7,6 +8,7 @@ import random
 import base64
 import time
 import climax_process as cp
+import moviepy.audio.fx.all as afx
 
 app = Flask(__name__)
 
@@ -29,7 +31,7 @@ def combine(inputs, audio, output):
         set_position(('center', 0))],
         size=PHONE_RESOLUTION
     )
-    audio_clip = mpy.AudioFileClip(audio)
+    audio_clip = mpy.AudioFileClip(audio).afx(afx.audio_fadein, 1.0).afx(afx.audio_fadeout, 5.0)
     video_clip.audio = audio_clip
     video_clip.write_videofile(output, fps=24)
 
@@ -42,7 +44,6 @@ DUMMY_RESULT = [5, 2, 2, 2, 2]
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
     data = request.get_json()
-    print(data)
     audio_data = data['audio_data']
     file_type = data['file_type']
     audio_name = ''.join(
@@ -50,8 +51,8 @@ def upload_audio():
         )
     with open("./audio/" + audio_name + "." + file_type, "wb") as f:
         f.write(base64.b64decode(audio_data))
-    input_lengths = cp.main("./audio/" + audio_name + "." + file_type)
-    return jsonify({'num_inputs': len(input_lengths), 'input_lengths': input_lengths, 'audio_name': audio_name, 'file_type': file_type})
+    input_lengths, audio_path = cp.main("./audio/" + audio_name + "." + file_type)
+    return jsonify({'num_inputs': len(input_lengths), 'input_lengths': input_lengths, 'audio_name': audio_path[:-4], 'file_type': 'mp3'})
 
 
 @app.route('/upload_images', methods=['POST'])
@@ -75,10 +76,10 @@ def upload_music():
     audio_file_type = data['file_type']
     combine(
         list(zip(input_files, input_lengths)), 
-        "./audio/" + audio_name + "." + audio_file_type, 
-        "./video/" + audio_name + ".mp4"
+        audio_name + "." + audio_file_type, 
+        audio_name + ".mp4"
         )
     video_encoding = ""
-    with open("./video/" + audio_name + ".mp4", "rb") as f:
+    with open(audio_name + ".mp4", "rb") as f:
         video_encoding = str(base64.b64encode(f.read()))
     return jsonify({'video_encoding': video_encoding, 'file_type': 'mp4'})
