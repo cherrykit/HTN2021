@@ -2,7 +2,8 @@
   <b-container id="page">
     <b-navbar fixed="top" style="background-color: #434343; justify-content: center;">
     <h1 v-show="!music">Choose a song</h1>
-    <h1 v-show="this.fileArray.length==0 && !preview && music">Please upload {{ num }} images.</h1>
+    <h1 v-show="music && num == -1">Processing your song...</h1>
+    <h1 v-show="this.fileArray.length==0 && !preview && music && num != -1">Please upload {{ num }} images.</h1>
     <h1 v-show="this.fileArray.length && !preview"><div :class="items.length !== num ? 'textColor' : ''"> {{ items.length }} / {{ num }} </div> images uploaded.</h1>
     <h1 v-show="preview && !video">Loading your preview...</h1>
     <h1 v-show="preview && video">Preview your result</h1>
@@ -16,7 +17,7 @@
       accept="audio/mpeg"
     ></b-form-file>
     <b-form-file style="margin-top: 100px;"
-      v-show="this.fileArray.length==0 && !preview && music"
+      v-show="this.fileArray.length==0 && !preview && music && num != -1"
       v-model="fileArray"
       :state="Boolean(fileArray)"
       :file-name-formatter="formatNames"
@@ -47,7 +48,16 @@
         ></b-form-file> </b-col>
     </b-row>
     <br>
-    <b-button variant="primary" @click="onSubmit()" v-show="this.items.length == num && !preview">Continue</b-button>
+    <br>
+    <b-row v-show="music && !preview && num != -1">
+    <b-col>
+    <b-button @click="reset()">Choose different song</b-button>
+    </b-col>
+    <b-col>
+    <b-button variant="primary" @click="onSubmit()" v-show="this.items.length == num">Continue</b-button>
+    </b-col>
+    </b-row>
+
     <video controls v-show="preview && video" :src="video">
     </video>
     <br>
@@ -78,7 +88,7 @@ export default {
   components: {Container, Draggable},
   data() {
     return {
-      num: 0,
+      num: -1,
       images: [],
       fileArray: [],
       msg: '',
@@ -185,6 +195,12 @@ export default {
     goBack() {
       this.video = null;
       this.preview = false;
+    },
+    reset() {
+      this.fileArray = [];
+      this.items = [];
+      this.music = null;
+      this.num = -1;
     }
   }
 };
