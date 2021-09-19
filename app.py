@@ -50,7 +50,7 @@ def upload_audio():
     with open("./audio/" + audio_name + "." + file_type, "wb") as f:
         f.write(base64.b64decode(audio_data))
     input_lengths = cp.main("./audio/" + audio_name + "." + file_type)
-    return jsonify({'num_inputs': len(result), 'input_lengths': input_lengths, 'audio_name': audio_name, 'file_type': file_type})
+    return jsonify({'num_inputs': len(input_lengths), 'input_lengths': input_lengths, 'audio_name': audio_name, 'file_type': file_type})
 
 
 @app.route('/upload_images', methods=['POST'])

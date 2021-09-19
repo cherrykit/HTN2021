@@ -1,13 +1,22 @@
 <template>
   <b-container id="page">
     <b-navbar fixed="top" style="background-color: #434343; justify-content: center;">
-    <h1 v-show="this.fileArray.length==0 && !preview">Please upload {{ num }} images.</h1>
+    <h1 v-show="!music">Choose a song</h1>
+    <h1 v-show="this.fileArray.length==0 && !preview && music">Please upload {{ num }} images.</h1>
     <h1 v-show="this.fileArray.length && !preview"><div :class="items.length !== num ? 'textColor' : ''"> {{ items.length }} / {{ num }} </div> images uploaded.</h1>
     <h1 v-show="preview && !video">Loading your preview...</h1>
     <h1 v-show="preview && video">Preview your result</h1>
     </b-navbar>
     <b-form-file style="margin-top: 100px;"
-      v-show="this.fileArray.length==0 && !preview"
+      v-show="!this.music && !preview"
+      v-model="music"
+      :state="Boolean(music)"
+      placeholder="Upload an mp3 file"
+      no-drop
+      accept="audio/mpeg"
+    ></b-form-file>
+    <b-form-file style="margin-top: 100px;"
+      v-show="this.fileArray.length==0 && !preview && music"
       v-model="fileArray"
       :state="Boolean(fileArray)"
       :file-name-formatter="formatNames"
@@ -69,15 +78,17 @@ export default {
   components: {Container, Draggable},
   data() {
     return {
-      num: 10,
+      num: 0,
       images: [],
       fileArray: [],
       msg: '',
       items: [],
       file: null,
-      input_lengths: new Array(10).fill(1),
+      input_lengths: [],
       preview: false,
-      video: null
+      video: null,
+      music: null,
+      filename: null
     };
   },
   watch: {
@@ -94,6 +105,27 @@ export default {
             })
           )
         }
+      }
+    },
+    music(newMusic, oldMusic){
+      if (newMusic) {
+        base64Encode(newMusic).then(val => {
+          var mp3 = val;
+          var path = 'http://127.0.0.1:5000/upload_audio';
+          axios.post(path, {
+            audio_data: mp3,
+            file_type: "mp3"
+          }).then((res) => {
+            this.num = res.data.num_inputs
+            this.input_lengths = res.data.input_lengths
+            this.filename = res.data.audio_name
+          })
+          .catch((error) => {
+            // eslint-disable-next-line
+            console.error(error);
+          });
+
+        })
       }
     }
   },
@@ -126,7 +158,7 @@ export default {
         axios.post(path, {
             inputs: submit_img, 
             input_lengths: this.input_lengths,
-            audio_name: "audio1",
+            audio_name: this.filename,
             file_type: "mp3"
         }).then((res) => {
             this.video = 'data:video/' + res.data.file_type + ';base64,' + res.data.video_encoding.substring(2).slice(0, -1);
