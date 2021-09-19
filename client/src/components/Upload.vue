@@ -1,5 +1,37 @@
 <template>
   <b-container id="page">
+    <style>
+dropdown: { 
+  position: relative; 
+  cursor: pointer;
+}
+
+multiselect: {
+  position: relative;
+  
+  ul {
+    border: 1px solid #ddd;
+    border-top: 0;
+    border-radius: 0 0 3px 3px;
+    left: 0px;
+    padding: 8px 8px;
+    position: absolute;
+    top: -1rem;
+    width: 100%;
+    list-style: none;
+    max-height: 150px;
+    overflow: auto;
+  }
+}
+
+overselect: {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+    </style>
     <b-navbar fixed="top" style="background-color: #434343; justify-content: center;">
     <h1 v-show="this.fileArray.length==0 && !preview">Please upload {{ num }} images.</h1>
     <h1 v-show="this.fileArray.length && !preview"><div :class="items.length !== num ? 'textColor' : ''"> {{ items.length }} / {{ num }} </div> images uploaded.</h1>
@@ -24,6 +56,13 @@
                 </b-col>
                 <!-- b-col><img @click="onEdit(item.id)" class="image" src="../assets/edit.png" alt="edit"></b-col -->
                 <b-col><img @click="onDelete(item.id)" class="image" src="../assets/delete.png" alt="delete"></b-col>
+                <div>
+                <!-- <b-dropdown id="dropdown-1" text="Select Effects" class="m-md-2" v-for="(option, index) in effects" :key="index">
+                  <b-dropdown-item>First Action</b-dropdown-item>
+                  <b-dropdown-item>Second Action</b-dropdown-item>
+                  <b-dropdown-item>Third Action</b-dropdown-item>
+                  
+                </b-dropdown> -->
             </b-row>
         </Draggable>
     </Container>
@@ -77,7 +116,37 @@ export default {
       file: null,
       input_lengths: new Array(10).fill(1),
       preview: false,
-      video: null
+      video: null,
+      effects: [
+      {
+        text: 'Black & White',
+        value: 'bw'
+      },
+      {
+        text: 'Brighten',
+        value: 'bright'
+      },
+      {
+        text: 'Darken',
+        value: 'dark'
+      },
+      {
+        text: 'Invert Colours',
+        value: 'invert'
+      },
+      {
+        text: 'Flip Horizontally',
+        value: 'horizontal'
+      },
+      {
+        text: 'Flip Vertically',
+        value: 'vertical'
+      },
+      {
+        text: 'Painting',
+        value: 'horizontal'
+      }
+    ]
     };
   },
   watch: {

@@ -42,6 +42,7 @@ DUMMY_RESULT = [5, 2, 2, 2, 2]
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
     data = request.get_json()
+    print(data)
     audio_data = data['audio_data']
     file_type = data['file_type']
     audio_name = ''.join(
