@@ -1,6 +1,6 @@
 <template>
   <b-container id="page">
-    <b-navbar fixed="top" style="background-color: #434343; justify-content: center;">
+    <b-navbar fixed="top" style="background-color: #061E3E; justify-content: center;">
     <h1 v-show="!music">Choose a song</h1>
     <h1 v-show="music && num == -1">Processing your song...</h1>
     <h1 v-show="this.fileArray.length==0 && !preview && music && num != -1">Please upload {{ num }} images.</h1>
@@ -26,7 +26,7 @@
       accept="image/*"
       multiple
     ></b-form-file>
-    <Container @drop="onDrop" v-show="this.fileArray.length && !preview" style="padding-top: 100px;">
+    <Container style="padding-top: 100px;" @drop="onDrop" v-show="this.fileArray.length && !preview">
         <Draggable v-for="item in items" :key="item.id">
             <b-row class="draggable-item dragRow" align-v="center">
                 <b-col>

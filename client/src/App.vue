@@ -16,7 +16,7 @@ body {
   padding-top: 10px;
   display: flex;
   min-height: 100%;
-  background-color: #434343;
-  color: #5297ff;
+  background-color: #061E3E;
+  color: #861E3E;
 }
 </style>
