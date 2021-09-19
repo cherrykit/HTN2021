@@ -9,13 +9,14 @@ import base64
 import time
 import climax_process as cp
 import moviepy.audio.fx.all as afx
+import moviepy.video.fx.all as vfx
 
 app = Flask(__name__)
 
 # inputs: list of (input, length) pairs (TODO: support videos?)
 # audio: link to audio file
 PHONE_RESOLUTION = (360, 640)
-def combine(inputs, audio, output):
+def combine(inputs, audio, output, effects, message=""):
     print(inputs)
     image_videos = [
         mpy.ImageClip(pair[0]).
@@ -24,6 +25,11 @@ def combine(inputs, audio, output):
         set_duration(pair[1])
         for pair in inputs
     ]
+    # print(message)
+    # if len(message) > 0:
+    #     text_clip = mpy.TextClip(message, fontsize=50, color='black')
+    #     text_clip = text_clip.set_pos('center').set_duration(5)
+    #     image_videos[0] = mpy.CompositeVideoClip([image_videos[0], text_clip])
     # idk why, but unless I create a CompositeVideoClip and set the size variable the output video doesn't work
     # temp solution: wrap the output in a CompositeVideoClip
     video_clip = mpy.CompositeVideoClip(
@@ -31,8 +37,23 @@ def combine(inputs, audio, output):
         set_position(('center', 0))],
         size=PHONE_RESOLUTION
     )
-    audio_clip = mpy.AudioFileClip(audio).afx(afx.audio_fadein, 1.0).afx(afx.audio_fadeout, 5.0)
+    audio_clip = mpy.AudioFileClip(audio).fx(afx.audio_fadein, 1.0).fx(afx.audio_fadeout, 5.0)
     video_clip.audio = audio_clip
+    for e in effects:
+        if e == 'bw':
+            video_clip = video_clip.fx(vfx.blackwhite)
+        elif e == 'bright':
+            video_clip = video_clip.fx(vfx.colorx, 2)
+        elif e == 'dark':
+            video_clip = video_clip.fx(vfx.colorx, 0.5)
+        elif e == 'invert':
+            video_clip = video_clip.fx(vfx.invert_colors)
+        elif e == 'horizontal':
+            video_clip = video_clip.fx(vfx.mirror_x)
+        elif e == 'vertical':
+            video_clip = video_clip.fx(vfx.mirror_y)
+        elif e == 'painting':
+            video_clip = video_clip.fx(vfx.painting)
     video_clip.write_videofile(output, fps=24)
 
 # combine([("photo1.jpg", 10), ("photo2.jpeg", 17)], "audio1.mp3", "test.mp4")
@@ -56,11 +77,13 @@ def upload_audio():
 
 
 @app.route('/upload_images', methods=['POST'])
-def upload_music():
+def upload_images():
     data = request.get_json()
     input_lengths = data['input_lengths']
     input_encodings = data['inputs']
     input_files = []
+    effectsSelected = data['effectsSelected']
+    message = data['message']
 
     for encoding in input_encodings:
         file_name = ''.join(
@@ -77,7 +100,9 @@ def upload_music():
     combine(
         list(zip(input_files, input_lengths)), 
         audio_name + "." + audio_file_type, 
-        audio_name + ".mp4"
+        audio_name + ".mp4",
+        effectsSelected,
+        message
         )
     video_encoding = ""
     with open(audio_name + ".mp4", "rb") as f:

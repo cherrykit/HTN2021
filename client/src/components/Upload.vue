@@ -1,37 +1,5 @@
 <template>
   <b-container id="page">
-    <style>
-dropdown: { 
-  position: relative; 
-  cursor: pointer;
-}
-
-multiselect: {
-  position: relative;
-  
-  ul {
-    border: 1px solid #ddd;
-    border-top: 0;
-    border-radius: 0 0 3px 3px;
-    left: 0px;
-    padding: 8px 8px;
-    position: absolute;
-    top: -1rem;
-    width: 100%;
-    list-style: none;
-    max-height: 150px;
-    overflow: auto;
-  }
-}
-
-overselect: {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
-    </style>
     <b-navbar fixed="top" style="background-color: #434343; justify-content: center;">
     <h1 v-show="!music">Choose a song</h1>
     <h1 v-show="music && num == -1">Processing your song...</h1>
@@ -66,13 +34,6 @@ overselect: {
                 </b-col>
                 <!-- b-col><img @click="onEdit(item.id)" class="image" src="../assets/edit.png" alt="edit"></b-col -->
                 <b-col><img @click="onDelete(item.id)" class="image" src="../assets/delete.png" alt="delete"></b-col>
-                <div>
-                <!-- <b-dropdown id="dropdown-1" text="Select Effects" class="m-md-2" v-for="(option, index) in effects" :key="index">
-                  <b-dropdown-item>First Action</b-dropdown-item>
-                  <b-dropdown-item>Second Action</b-dropdown-item>
-                  <b-dropdown-item>Third Action</b-dropdown-item>
-                  
-                </b-dropdown> -->
             </b-row>
         </Draggable>
     </Container>
@@ -86,6 +47,17 @@ overselect: {
             accept="image/*"
         ></b-form-file> </b-col>
     </b-row>
+    <h1 v-show="this.fileArray.length && !preview">Choose filters and text:</h1>
+    <b-form-checkbox-group
+      v-show="this.fileArray.length && !preview"
+      v-model="effectsSelected"
+      :options="effects"
+      class="mb-3"
+      value-field="item"
+      text-field="name"
+      disabled-field="notEnabled"
+    ></b-form-checkbox-group>
+    <!-- <input v-show="this.fileArray.length && !preview" v-model="message" placeholder="Intro Text"> -->
     <br>
     <br>
     <b-row v-show="music && !preview && num != -1">
@@ -138,36 +110,38 @@ export default {
       video: null,
       effects: [
       {
-        text: 'Black & White',
-        value: 'bw'
+        name: 'Black & White',
+        item: 'bw'
       },
       {
-        text: 'Brighten',
-        value: 'bright'
+        name: 'Brighten',
+        item: 'bright'
       },
       {
-        text: 'Darken',
-        value: 'dark'
+        name: 'Darken',
+        item: 'dark'
       },
       {
-        text: 'Invert Colours',
-        value: 'invert'
+        name: 'Invert Colours',
+        item: 'invert'
       },
       {
-        text: 'Flip Horizontally',
-        value: 'horizontal'
+        name: 'Flip Horizontally',
+        item: 'horizontal'
       },
       {
-        text: 'Flip Vertically',
-        value: 'vertical'
+        name: 'Flip Vertically',
+        item: 'vertical'
       },
       {
-        text: 'Painting',
-        value: 'horizontal'
+        name: 'Painting',
+        item: 'painting'
       }
     ],
+    effectsSelected: [],
       music: null,
-      filename: null
+      filename: null,
+      message: ""
     };
   },
   watch: {
@@ -198,6 +172,7 @@ export default {
             this.num = res.data.num_inputs
             this.input_lengths = res.data.input_lengths
             this.filename = res.data.audio_name
+            this.file_type = res.data.file_type
           })
           .catch((error) => {
             // eslint-disable-next-line
@@ -238,7 +213,9 @@ export default {
             inputs: submit_img, 
             input_lengths: this.input_lengths,
             audio_name: this.filename,
-            file_type: "mp3"
+            file_type: this.file_type,
+            effectsSelected: this.effectsSelected,
+            message: this.message
         }).then((res) => {
             this.video = 'data:video/' + res.data.file_type + ';base64,' + res.data.video_encoding.substring(2).slice(0, -1);
           })

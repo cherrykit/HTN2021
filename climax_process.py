@@ -57,7 +57,7 @@ def cut_audio(audio_file, chorus_start_sec, tempo):
     # clip starts 5 seconds before chorus
     input_lengths = [5]
     chorus_start_sec = (chorus_start_sec*1000) - 5000
-    chorus_end_sec = chorus_start_sec + 25000
+    chorus_end_sec = chorus_start_sec + 15000
     audio_clip = sound[chorus_start_sec:chorus_end_sec]
     
     # if path doesn't exist, then create new folder for music
@@ -73,7 +73,7 @@ def cut_audio(audio_file, chorus_start_sec, tempo):
     
     # for how many bpm fit into 10 seconds, create split up audio
     start = chorus_start_sec+5000
-    for i in range(2,int(20000//ms)+2):
+    for i in range(2,int(10000//ms)+2):
         pic = sound[start:start+ms]
         input_lengths.append(float(ms) / 1000)
         pic.export(path + "/" + str(i) + "_pic.mp3", format="mp3")
@@ -81,7 +81,7 @@ def cut_audio(audio_file, chorus_start_sec, tempo):
     return input_lengths, audio_path
     
 def main(audio_file):
-    chorus_start_sec = find_and_output_chorus(audio_file, audio_file.replace(".mp3", "-clipped.wav"), 20)
+    chorus_start_sec = find_and_output_chorus(audio_file, audio_file.replace(".mp3", "-clipped.wav"), 10)
     tempo = bpm(audio_file)
     input_lengths, audio_path = cut_audio(audio_file, chorus_start_sec, tempo)
     return input_lengths, audio_path
